@@ -193,6 +193,21 @@ Watch a YouTube Walkthrough on AWS App Runner for this repo here:  https://www.y
 
 ![mlops](https://user-images.githubusercontent.com/58792/119266194-d3196c00-bbb7-11eb-929e-77718411ffd5.jpg)
 
+After following the steps, the application is deployed in AWS App Runner
+
+![mlops](./resources/AWSAppRunner.PNG)
+
+Also, this is the test step to make sure that application is running
+``` shell
+curl -d '{ "Weight":200 }' -H "Content-Type: application/json" -X POST https://scizfg6rki.us-east-2.awsapprunner.com/predict
+{
+  "prediction": {
+    "height_human_readable": "6 foot, 2 inches", 
+    "height_inches": 73.61
+  }
+}
+```
+
 #### AWS Co-Pilot
 
 
@@ -220,6 +235,44 @@ D.  Verify it works by using `./utilscli.py`
 
 #### GKE (Kubernetes)
 
+1. Create Cluster
+    ```
+    gcloud container clusters create mlops-cookbook --zone us-central1-c
+    ```
+2. Get credentials to authenticate
+    ```
+    gcloud container clusters get-credentials mlops-cookbook --zone us-central1-c
+    ```
+3. Push the image created to the docker registry
+    ```
+    gcloud auth configure-docker \
+    >     us-central1-docker.pkg.dev
+    docker push gcr.io/inner-autonomy-328802/mloops
+    ```
+4. Create a deployment
+    ```
+    kubectl create deployment mlops-cookbook --image=gcr.io/inner-autonomy-328802/mloops
+    deployment.apps/mlops-cookbook created
+    ```
+5. Create a service to expose the port needed.
+    ```
+    kubectl expose deployment mlops-cookbook --type=LoadBalancer --port 8080
+    service/mlops-cookbook exposed
+    ```
+6. Check if this is ready, External-IP should be assinged
+    ```
+    kubectl get service
+    ```
+7. Test the application using curl, postman or other methods.
+    ```
+    $ curl -d '{ "Weight":200 }' -H "Content-Type: application/json" -X POST http://34.122.63.60:8080/predict
+    {
+      "prediction": {
+        "height_human_readable": "6 foot, 2 inches",
+        "height_inches": 73.61
+      }
+    }
+    ```
 ### Azure App Services
 
 
